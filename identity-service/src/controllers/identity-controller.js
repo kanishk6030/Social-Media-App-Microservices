@@ -1,6 +1,6 @@
 const logger = require("../utils/logger");
 const User = require("../models/User");
-const { validateRegistration } = require("../utils/validation");
+const { validateRegistration, validateLogin } = require("../utils/validation");
 const generateToken = require("../utils/generateTokens");
 
 //User registration 
@@ -51,4 +51,72 @@ const registerUser = async (req,res)=>{
     }
 }
 
-module.exports = { registerUser }
+// User  login
+
+const loginUser = async(req,res,next)=>{
+    logger.info("Login endpoint hit ...");
+    try {
+        const { error } = validateLogin(req.body);
+    if(error){
+        logger.warn("Validation Error",error.details[0].message);
+        return res.status(400).json({
+            success:false,
+            message:error.details[0].message,
+        })
+    }
+    const {email,password} = req.body;
+    if(!req.body){
+        logger.warn("Empty request body");
+    }
+
+    let user = await User.findOne({email});
+    if(!user){
+        logger.warn("User Not Found");
+        return res.status(400).json({
+            success:false,
+            message:"Invalid Credentials"
+        })
+    }
+
+    const isValidPassword = await user.comparePassword(password);
+    if(!isValidPassword){
+        logger.warn("Password is Wrong");
+        return res.status(400).json({
+            success:false,
+            message:"Password is Wrong"
+        })
+    }
+
+    const {accessToken, refreshToken} = await generateToken(user);
+
+    res.json({
+        accessToken,
+        refreshToken,
+        user:user._id,
+    })
+    }catch(error){
+        logger.warn("Login Error Occured",error);
+      return res.status(500).json({
+        success:false,
+        message:"Internal Server Error"
+      }) 
+    }
+
+};
+
+
+// refresh  Token
+const refreshTokenUser = async(req,res) => {
+
+    try{
+
+    }catch(error){
+        logger.warn("Login Error Occured",error);
+      return res.status(500).json({
+        success:false,
+        message:"Internal Server Error"
+      })
+    }
+}
+
+module.exports = { registerUser ,loginUser }
