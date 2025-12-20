@@ -2,6 +2,7 @@ const logger = require("../utils/logger");
 const User = require("../models/User");
 const { validateRegistration, validateLogin } = require("../utils/validation");
 const generateToken = require("../utils/generateTokens");
+const RefreshToken = require("../models/RefreshToken");
 
 //User registration 
 
@@ -107,10 +108,49 @@ const loginUser = async(req,res,next)=>{
 
 // refresh  Token
 const refreshTokenUser = async(req,res) => {
+    logger.warn("Refresh Token endpoint hit ...");
+    try{    
+        const {refreshToken} = req.body;
+        if(!refreshToken){
+            logger.warn("Refresh Token missing");
+            return res.status(400).json({
+                success:false,
+                message:"Refresh Token missing"
+            })
+        }
 
-    try{
+    const storedToken = await RefreshToken.findOne({token:refreshToken});
+    
+    if(!storedToken || storedToken.expiredAt < new Date()){
+        logger.warn("Invalid or Expired refresh Token");
 
-    }catch(error){
+    return res.status(400).json({
+        success:false,
+        message:"Invalid or Expired refresh Token",
+    })
+    }
+
+    const user = await user.findById(storedToken.user);
+
+    if(!user){
+        logger.warn("User not Found");
+        return res.status(401).json({
+            success:false,
+            message:"User not found",
+        })
+    }
+
+    const{accessToken:newAccessToken,refreshToken:newRefreshToken} = generateToken(user);
+
+    //delete the previous stored Refresh Token 
+    await RefreshToken.deleteOne({id:storedToken._id});
+
+    res.json({
+        accessToken:newAccessToken,
+        refreshToken:newRefreshToken,
+    })
+    }
+    catch(error){
         logger.warn("Login Error Occured",error);
       return res.status(500).json({
         success:false,
@@ -119,4 +159,34 @@ const refreshTokenUser = async(req,res) => {
     }
 }
 
-module.exports = { registerUser ,loginUser }
+//logout
+const logoutUser = async(req,res)=>{
+    logger.warn("Logout endpoint hit ...");
+    try{    
+        const {refreshToken} = req.body;
+        if(!refreshToken){
+            logger.warn("Refresh Token missing");
+            return res.status(400).json({
+                success:false,
+                message:"Refresh Token missings"
+            })
+        }
+
+        await RefreshToken.deleteOne({token:refreshToken});
+        logger.info("refresh token deleted successfully for logout")
+
+        res.json({
+            success:true,
+            message:"Logout successfully"
+        })
+    }
+    catch(error){
+        logger.warn("Login Error Occured",error);
+      return res.status(500).json({
+        success:false,
+        message:"Internal Server Error"
+      })
+    }
+}
+
+module.exports = { registerUser ,loginUser,refreshTokenUser,logoutUser };

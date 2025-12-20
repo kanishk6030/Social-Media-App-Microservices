@@ -6,7 +6,7 @@ const generateToken = async (user) =>{
     const accessToken = jwt.sign({
         userId:user._id,
         username:user.username,
-    },process.env.JWT_SCERET,{expiresIn:"15m"});
+    },process.env.JWT_SECRET,{expiresIn:"15m"});
 
     const refreshToken = crypto.randomBytes(40).toString("hex");
     const expiredAt = new Date();
