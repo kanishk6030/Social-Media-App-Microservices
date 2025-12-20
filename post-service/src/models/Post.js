@@ -1,4 +1,3 @@
-const { required } = require("joi");
 const mongoose = require("mongoose");
 
 const postSchema = mongoose.Schema({
@@ -15,7 +14,8 @@ const postSchema = mongoose.Schema({
         type:String,
     },
     createdAt:{
-        type:Date.now(),
+        type:Date,
+        default:Date.now,
     }
 },{timestamps:true})
 

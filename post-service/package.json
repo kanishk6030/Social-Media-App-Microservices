@@ -5,9 +5,11 @@
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "dependencies": {
     "argon2": "^0.44.0",
@@ -22,6 +24,7 @@
     "mongoose": "^8.19.1",
     "nodemon": "^3.1.10",
     "rate-limit-redis": "^4.2.2",
+    "rate-limiter-flexible": "^8.0.1",
     "winston": "^3.18.3"
   }
 }
